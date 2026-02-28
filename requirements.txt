@@ -1,1 +1,3 @@
 django
+google-genai # for gemini
+python-dotenv # read gemini api key in .env
