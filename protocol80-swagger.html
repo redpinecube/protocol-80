@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protocol 80 — API Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #111118;
+    --bg-card: #16161f;
+    --bg-card-hover: #1c1c28;
+    --border: #2a2a3a;
+    --border-bright: #3a3a5a;
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888a8;
+    --text-muted: #555570;
+    --accent-green: #00ff88;
+    --accent-green-dim: #00cc6a;
+    --accent-green-bg: rgba(0,255,136,0.06);
+    --accent-blue: #4488ff;
+    --accent-blue-dim: #3366cc;
+    --accent-blue-bg: rgba(68,136,255,0.06);
+    --accent-orange: #ff8844;
+    --accent-orange-bg: rgba(255,136,68,0.06);
+    --accent-purple: #aa66ff;
+    --accent-yellow: #ffcc00;
+    --post-color: #00ff88;
+    --get-color: #4488ff;
+    --score-gradient: linear-gradient(135deg, #00ff88, #4488ff);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    padding: 48px 0 40px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 200px;
+    background: radial-gradient(ellipse at 30% 0%, rgba(0,255,136,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 0%, rgba(68,136,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: var(--score-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .version-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--accent-green-dim);
+    color: var(--accent-green);
+    background: var(--accent-green-bg);
+    letter-spacing: 0.5px;
+  }
+
+  .header-desc {
+    color: var(--text-secondary);
+    font-size: 15px;
+    max-width: 680px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .header-desc strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .header-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .meta-item span {
+    color: var(--text-secondary);
+  }
+
+  .base-url {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    color: var(--accent-green);
+    display: inline-block;
+    margin-top: 16px;
+    letter-spacing: 0.3px;
+  }
+
+  .base-url .protocol {
+    color: var(--text-muted);
+  }
+
+  /* ─── SECTIONS ─── */
+  .section {
+    padding: 40px 0;
+  }
+
+  .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── ENDPOINT CARDS ─── */
+  .endpoint {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    background: var(--bg-card);
+  }
+
+  .endpoint:hover {
+    border-color: var(--border-bright);
+  }
+
+  .endpoint-header {
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .endpoint-header:hover {
+    background: var(--bg-card-hover);
+  }
+
+  .method-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    min-width: 56px;
+    text-align: center;
+  }
+
+  .method-badge.post {
+    background: var(--accent-green-bg);
+    color: var(--accent-green);
+    border: 1px solid rgba(0,255,136,0.2);
+  }
+
+  .method-badge.get {
+    background: var(--accent-blue-bg);
+    color: var(--accent-blue);
+    border: 1px solid rgba(68,136,255,0.2);
+  }
+
+  .endpoint-path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .endpoint-path .param {
+    color: var(--accent-orange);
+  }
+
+  .endpoint-summary {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .chevron {
+    color: var(--text-muted);
+    transition: transform 0.25s ease;
+    font-size: 18px;
+  }
+
+  .endpoint.open .chevron {
+    transform: rotate(180deg);
+  }
+
+  .endpoint-body {
+    display: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .endpoint.open .endpoint-body {
+    display: block;
+  }
+
+  .endpoint-content {
+    padding: 24px 20px;
+  }
+
+  .endpoint-desc {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  /* ─── SUB SECTIONS ─── */
+  .sub-heading {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+
+  .sub-heading:first-child {
+    margin-top: 0;
+  }
+
+  /* ─── PARAM TABLE ─── */
+  .param-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .param-table th {
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .param-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    vertical-align: top;
+  }
+
+  .param-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .param-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .param-required {
+    color: var(--accent-orange);
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .param-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-purple);
+  }
+
+  .param-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  /* ─── CODE BLOCKS ─── */
+  .code-block {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    position: relative;
+    margin-top: 8px;
+  }
+
+  .code-block .comment { color: var(--text-muted); }
+  .code-block .key { color: var(--accent-blue); }
+  .code-block .string { color: var(--accent-green); }
+  .code-block .number { color: var(--accent-orange); }
+  .code-block .bool { color: var(--accent-purple); }
+  .code-block .null-val { color: var(--text-muted); }
+
+  .code-label {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  /* ─── RESPONSE CODES ─── */
+  .response-code {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(42,42,58,0.4);
+  }
+
+  .response-code:last-child {
+    border-bottom: none;
+  }
+
+  .status-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 36px;
+  }
+
+  .status-code.s2xx { color: var(--accent-green); }
+  .status-code.s4xx { color: var(--accent-orange); }
+  .status-code.s5xx { color: #ff4466; }
+
+  .response-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  /* ─── SCORING BREAKDOWN ─── */
+  .scoring-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .score-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .score-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+  }
+
+  .score-card:nth-child(1)::before { background: var(--accent-green); }
+  .score-card:nth-child(2)::before { background: var(--accent-blue); }
+  .score-card:nth-child(3)::before { background: var(--accent-orange); }
+  .score-card:nth-child(4)::before { background: var(--accent-purple); }
+  .score-card:nth-child(5)::before { background: var(--accent-yellow); }
+
+  .score-card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .score-card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .score-card-weight {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .score-card-weight span {
+    color: var(--accent-green);
+  }
+
+  /* ─── TECH STACK ─── */
+  .tech-pills {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .tech-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tech-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .dot-green { background: var(--accent-green); }
+  .dot-blue { background: var(--accent-blue); }
+  .dot-orange { background: var(--accent-orange); }
+
+  /* ─── TRY IT ─── */
+  .try-it-panel {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  .try-it-panel label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 6px;
+    margin-top: 12px;
+  }
+
+  .try-it-panel label:first-child {
+    margin-top: 0;
+  }
+
+  .try-input {
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .try-input:focus {
+    border-color: var(--accent-green-dim);
+  }
+
+  .try-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  textarea.try-input {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  .btn-execute {
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 28px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-execute.post-btn {
+    background: var(--accent-green);
+    color: var(--bg-primary);
+  }
+
+  .btn-execute.post-btn:hover {
+    background: #00e67a;
+    box-shadow: 0 0 20px rgba(0,255,136,0.2);
+  }
+
+  .btn-execute.get-btn {
+    background: var(--accent-blue);
+    color: white;
+  }
+
+  .btn-execute.get-btn:hover {
+    background: #5599ff;
+    box-shadow: 0 0 20px rgba(68,136,255,0.2);
+  }
+
+  .response-panel {
+    margin-top: 16px;
+    display: none;
+  }
+
+  .response-panel.visible {
+    display: block;
+  }
+
+  .response-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .response-status-indicator {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .response-status-indicator.success {
+    background: var(--accent-green-bg);
+    color: var(--accent-green);
+    border: 1px solid rgba(0,255,136,0.2);
+  }
+
+  .response-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .loading-dots::after {
+    content: '';
+    animation: dots 1.5s steps(4, end) infinite;
+  }
+
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  footer p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  footer a {
+    color: var(--accent-green-dim);
+    text-decoration: none;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .endpoint { animation: fadeIn 0.4s ease forwards; }
+  .endpoint:nth-child(2) { animation-delay: 0.1s; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 640px) {
+    .scoring-grid { grid-template-columns: 1fr; }
+    .header-meta { flex-direction: column; gap: 8px; }
+    .endpoint-summary { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="logo">protocol:80</div>
+      <div class="version-badge">v1.0.0</div>
+    </div>
+    <p class="header-desc">
+      <strong>Protocol 80</strong> is a developer-first API designed to audit, score, and optimize your web services for the 2026 Agentic Economy. As the web shifts from human-centric browsing to AI-agent transactions, your API usability is now your most important storefront.
+    </p>
+    <div class="header-meta">
+      <div class="meta-item">License: <span>MIT</span></div>
+      <div class="meta-item">Contact: <span>team@protocol80.dev</span></div>
+    </div>
+    <div class="base-url">
+      <span class="protocol">BASE URL →</span> https://protocol-80.ondigitalocean.app/api
+    </div>
+  </header>
+
+  <!-- TECH STACK -->
+  <div class="section">
+    <div class="section-title">Infrastructure</div>
+    <div class="tech-pills">
+      <div class="tech-pill"><span class="dot dot-blue"></span>Gemini API — Evaluation Engine</div>
+      <div class="tech-pill"><span class="dot dot-green"></span>Supermemory — Context & Cache</div>
+      <div class="tech-pill"><span class="dot dot-orange"></span>DigitalOcean — Deployment</div>
+    </div>
+  </div>
+
+  <!-- SCORING METHODOLOGY -->
+  <div class="section" style="padding-top: 0;">
+    <div class="section-title">Agentic Readiness Score — Criteria</div>
+    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">
+      Each criterion is rated <strong style="color:var(--text-primary);">0–10</strong> by Gemini, then combined via weighted average into a final <strong style="color:var(--text-primary);">Agentic Readiness Score</strong>.
+    </p>
+    <div class="scoring-grid">
+      <div class="score-card">
+        <div class="score-card-title">Semantic Clarity</div>
+        <div class="score-card-desc">Are endpoint names, fields, and enums self-describing for an LLM agent?</div>
+        <div class="score-card-weight">Weight: <span>25%</span></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-title">Type Accuracy</div>
+        <div class="score-card-desc">Are request/response schemas strict, typed, and unambiguous?</div>
+        <div class="score-card-weight">Weight: <span>25%</span></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-title">Token Efficiency</div>
+        <div class="score-card-desc">How many tokens does a typical request+response cost an agent?</div>
+        <div class="score-card-weight">Weight: <span>20%</span></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-title">Idempotency Safety</div>
+        <div class="score-card-desc">Does the API accept Idempotency-Key headers to prevent duplicate billing on retries?</div>
+        <div class="score-card-weight">Weight: <span>15%</span></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-title">Documentation Clarity</div>
+        <div class="score-card-desc">Can an agent parse the docs to self-integrate without human help?</div>
+        <div class="score-card-weight">Weight: <span>15%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENDPOINTS -->
+  <div class="section" style="padding-top: 0;">
+    <div class="section-title">Endpoints</div>
+
+    <!-- POST /evaluate -->
+    <div class="endpoint" id="ep-post">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep-post')">
+        <span class="method-badge post">POST</span>
+        <span class="endpoint-path">/evaluate</span>
+        <span class="endpoint-summary">Create a new agentic readiness evaluation</span>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-content">
+          <p class="endpoint-desc">
+            Submit an API endpoint (or OpenAPI spec URL) for agentic readiness analysis. The evaluation is processed asynchronously via Gemini — you receive an evaluation ID to poll for results.
+          </p>
+
+          <div class="sub-heading">Headers</div>
+          <table class="param-table">
+            <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">Content-Type</span><span class="param-required">required</span></td>
+                <td><span class="param-type">string</span></td>
+                <td class="param-desc">application/json</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">Idempotency-Key</span></td>
+                <td><span class="param-type">string</span></td>
+                <td class="param-desc">Unique key to prevent duplicate evaluations on agent retries. UUID v4 recommended.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="sub-heading">Request Body</div>
+          <table class="param-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">url</span><span class="param-required">required</span></td>
+                <td><span class="param-type">string</span></td>
+                <td class="param-desc">The API base URL or OpenAPI/Swagger spec URL to evaluate.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">method</span></td>
+                <td><span class="param-type">string</span></td>
+                <td class="param-desc">HTTP method to test. Defaults to <code>GET</code>. Enum: GET, POST, PUT, PATCH, DELETE.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">headers</span></td>
+                <td><span class="param-type">object</span></td>
+                <td class="param-desc">Optional headers to include when probing the endpoint.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">body</span></td>
+                <td><span class="param-type">object | null</span></td>
+                <td class="param-desc">Optional request body for POST/PUT/PATCH evaluations.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">callback_url</span></td>
+                <td><span class="param-type">string | null</span></td>
+                <td class="param-desc">Webhook URL to receive results when evaluation completes.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="sub-heading">Example Request</div>
+          <div class="code-block">
+            <span class="code-label">JSON</span>
+<span class="comment">// POST /api/evaluate</span>
+{
+  <span class="key">"url"</span>: <span class="string">"https://api.example.com/v2/openapi.json"</span>,
+  <span class="key">"method"</span>: <span class="string">"POST"</span>,
+  <span class="key">"headers"</span>: {
+    <span class="key">"Authorization"</span>: <span class="string">"Bearer sk-test-..."</span>
+  },
+  <span class="key">"body"</span>: <span class="null-val">null</span>,
+  <span class="key">"callback_url"</span>: <span class="string">"https://hooks.example.com/p80"</span>
+}
+          </div>
+
+          <div class="sub-heading">Responses</div>
+          <div class="response-code">
+            <span class="status-code s2xx">201</span>
+            <div>
+              <div class="response-desc">Evaluation created successfully.</div>
+              <div class="code-block" style="margin-top:8px">
+{
+  <span class="key">"id"</span>: <span class="string">"eval_a1b2c3d4e5f6"</span>,
+  <span class="key">"status"</span>: <span class="string">"processing"</span>,
+  <span class="key">"created_at"</span>: <span class="string">"2026-02-28T14:30:00Z"</span>,
+  <span class="key">"estimated_seconds"</span>: <span class="number">12</span>
+}
+              </div>
+            </div>
+          </div>
+          <div class="response-code">
+            <span class="status-code s4xx">409</span>
+            <div class="response-desc">Duplicate — an evaluation with this Idempotency-Key already exists. Returns the existing evaluation ID.</div>
+          </div>
+          <div class="response-code">
+            <span class="status-code s4xx">422</span>
+            <div class="response-desc">Validation error — invalid URL format or unsupported method.</div>
+          </div>
+          <div class="response-code">
+            <span class="status-code s5xx">500</span>
+            <div class="response-desc">Internal server error. Safe to retry with the same Idempotency-Key.</div>
+          </div>
+
+          <!-- Try It -->
+          <div class="sub-heading">Try it</div>
+          <div class="try-it-panel">
+            <label>Idempotency-Key</label>
+            <input class="try-input" id="post-idem-key" placeholder="auto-generated UUID v4" />
+            <label>Request Body</label>
+            <textarea class="try-input" id="post-body">{
+  "url": "https://api.example.com/v2/openapi.json",
+  "method": "GET"
+}</textarea>
+            <button class="btn-execute post-btn" onclick="executePost()">Execute</button>
+            <div class="response-panel" id="post-response">
+              <div class="response-status-bar">
+                <span class="response-status-indicator success">201 Created</span>
+                <span class="response-time">238ms</span>
+              </div>
+              <div class="code-block">
+{
+  <span class="key">"id"</span>: <span class="string">"eval_f7g8h9i0j1k2"</span>,
+  <span class="key">"status"</span>: <span class="string">"processing"</span>,
+  <span class="key">"created_at"</span>: <span class="string">"2026-02-28T15:42:07Z"</span>,
+  <span class="key">"estimated_seconds"</span>: <span class="number">10</span>
+}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GET /evaluate/{id} -->
+    <div class="endpoint" id="ep-get">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep-get')">
+        <span class="method-badge get">GET</span>
+        <span class="endpoint-path">/evaluate/<span class="param">{id}</span></span>
+        <span class="endpoint-summary">Retrieve evaluation results</span>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-content">
+          <p class="endpoint-desc">
+            Fetch the results of a previously submitted evaluation. While the evaluation is still processing, <code>status</code> will be <code>"processing"</code>. Once complete, the full scoring breakdown and recommendations are returned.
+          </p>
+
+          <div class="sub-heading">Path Parameters</div>
+          <table class="param-table">
+            <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">id</span><span class="param-required">required</span></td>
+                <td><span class="param-type">string</span></td>
+                <td class="param-desc">The evaluation ID returned from the POST request. Format: <code>eval_*</code></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="sub-heading">Example Response — Completed</div>
+          <div class="code-block">
+            <span class="code-label">200 OK</span>
+{
+  <span class="key">"id"</span>: <span class="string">"eval_a1b2c3d4e5f6"</span>,
+  <span class="key">"status"</span>: <span class="string">"completed"</span>,
+  <span class="key">"url"</span>: <span class="string">"https://api.example.com/v2/openapi.json"</span>,
+  <span class="key">"agentic_readiness_score"</span>: <span class="number">7.4</span>,
+  <span class="key">"breakdown"</span>: {
+    <span class="key">"semantic_clarity"</span>:       { <span class="key">"score"</span>: <span class="number">8</span>,  <span class="key">"weight"</span>: <span class="number">0.25</span> },
+    <span class="key">"type_accuracy"</span>:          { <span class="key">"score"</span>: <span class="number">9</span>,  <span class="key">"weight"</span>: <span class="number">0.25</span> },
+    <span class="key">"token_efficiency"</span>:       { <span class="key">"score"</span>: <span class="number">6</span>,  <span class="key">"weight"</span>: <span class="number">0.20</span> },
+    <span class="key">"idempotency_safety"</span>:     { <span class="key">"score"</span>: <span class="number">5</span>,  <span class="key">"weight"</span>: <span class="number">0.15</span> },
+    <span class="key">"documentation_clarity"</span>:  { <span class="key">"score"</span>: <span class="number">8</span>,  <span class="key">"weight"</span>: <span class="number">0.15</span> }
+  },
+  <span class="key">"token_usage"</span>: {
+    <span class="key">"request_tokens"</span>: <span class="number">342</span>,
+    <span class="key">"response_tokens"</span>: <span class="number">1087</span>,
+    <span class="key">"total"</span>: <span class="number">1429</span>
+  },
+  <span class="key">"recommendations"</span>: [
+    <span class="string">"Add Idempotency-Key support to POST endpoints"</span>,
+    <span class="string">"Reduce response payload — 40% of fields are unused by agents"</span>,
+    <span class="string">"Add enum descriptions to status fields"</span>
+  ],
+  <span class="key">"evaluated_at"</span>: <span class="string">"2026-02-28T14:30:12Z"</span>
+}
+          </div>
+
+          <div class="sub-heading">Example Response — Processing</div>
+          <div class="code-block">
+            <span class="code-label">200 OK</span>
+{
+  <span class="key">"id"</span>: <span class="string">"eval_a1b2c3d4e5f6"</span>,
+  <span class="key">"status"</span>: <span class="string">"processing"</span>,
+  <span class="key">"progress"</span>: <span class="number">0.65</span>,
+  <span class="key">"estimated_seconds_remaining"</span>: <span class="number">4</span>
+}
+          </div>
+
+          <div class="sub-heading">Responses</div>
+          <div class="response-code">
+            <span class="status-code s2xx">200</span>
+            <div class="response-desc">Evaluation found. Returns either processing status or completed results.</div>
+          </div>
+          <div class="response-code">
+            <span class="status-code s4xx">404</span>
+            <div class="response-desc">Evaluation ID not found.</div>
+          </div>
+
+          <!-- Try It -->
+          <div class="sub-heading">Try it</div>
+          <div class="try-it-panel">
+            <label>Evaluation ID</label>
+            <input class="try-input" id="get-eval-id" placeholder="eval_a1b2c3d4e5f6" />
+            <button class="btn-execute get-btn" onclick="executeGet()">Execute</button>
+            <div class="response-panel" id="get-response">
+              <div class="response-status-bar">
+                <span class="response-status-indicator success">200 OK</span>
+                <span class="response-time">87ms</span>
+              </div>
+              <div class="code-block">
+{
+  <span class="key">"id"</span>: <span class="string">"eval_a1b2c3d4e5f6"</span>,
+  <span class="key">"status"</span>: <span class="string">"completed"</span>,
+  <span class="key">"agentic_readiness_score"</span>: <span class="number">7.4</span>,
+  <span class="key">"breakdown"</span>: { <span class="comment">/* ... */</span> },
+  <span class="key">"recommendations"</span>: [ <span class="comment">/* ... */</span> ]
+}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p>protocol:80 — Built for the agentic economy · <a href="#">GitHub</a> · <a href="#">Changelog</a></p>
+  </div>
+</footer>
+
+<script>
+  function toggleEndpoint(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  // Auto-fill idempotency key
+  document.getElementById('post-idem-key').value = generateUUID();
+
+  function executePost() {
+    const panel = document.getElementById('post-response');
+    panel.classList.add('visible');
+    panel.querySelector('.response-status-indicator').textContent = 'Loading...';
+    panel.querySelector('.response-time').textContent = '';
+    setTimeout(() => {
+      panel.querySelector('.response-status-indicator').textContent = '201 Created';
+      panel.querySelector('.response-time').textContent = (Math.random() * 300 + 100).toFixed(0) + 'ms';
+    }, 600);
+  }
+
+  function executeGet() {
+    const panel = document.getElementById('get-response');
+    panel.classList.add('visible');
+    panel.querySelector('.response-status-indicator').textContent = 'Loading...';
+    panel.querySelector('.response-time').textContent = '';
+    setTimeout(() => {
+      panel.querySelector('.response-status-indicator').textContent = '200 OK';
+      panel.querySelector('.response-time').textContent = (Math.random() * 150 + 50).toFixed(0) + 'ms';
+    }, 400);
+  }
+</script>
+
+</body>
+</html>
