@@ -1,106 +1,24 @@
-# protocol 80
-Protocol 80 is a developer-first API designed to audit, score, and optimize your web services for the 2026 Agentic Economy.
-As the web shifts from human-centric browsing to AI-agent transactions, your API useability is now your most important storefront. 
 
-# dev set-up 
-set up a python virtual environment. 
 
-use the following command to install dependencies :
-pip install -r requirements.txt
-
-use python manage.py runserver to start backend server
-
-# CLI
-Use the project CLI from the repository root:
-
-```bash
-# Check API health
-python protocol80_cli.py health
-
-# Evaluate your API for AI usability
-python protocol80_cli.py evaluate https://myapi.com \
-  --endpoints /users,/products,/orders \
-  --documentation \
-  --response-format json \
-  --authentication \
-  --error-handling \
-  --versioning
-
-# Get quick score
-python protocol80_cli.py score https://myapi.com \
-  --endpoints /users,/products \
-  --documentation \
-  --authentication
-
-# Get detailed analysis with recommendations
-python protocol80_cli.py analyze https://myapi.com \
-  --documentation \
-  --response-format json
-
-# Make custom API requests
-python protocol80_cli.py request GET /health/
-python protocol80_cli.py request GET /
-python protocol80_cli.py request POST /api/evaluate/ --data '{"api_url": "https://example.com"}'
-
-# Run Django management commands through CLI
-python protocol80_cli.py manage migrate
-python protocol80_cli.py manage runserver
-```
-
-## Available API Endpoints
-When the server is running (default: http://127.0.0.1:8000):
-- `GET /` - API index with endpoint list
-- `GET /health/` - Health check
-- `POST /api/evaluate/` - Evaluate API usability (full report)
-- `POST /api/score/` - Get quick usability score
-- `POST /api/analyze/` - Get detailed analysis with recommendations
-- `/admin/` - Django admin interface
-
-## Auto Deploy to DigitalOcean
-This repo includes a GitHub Actions workflow at `.github/workflows/deploy-digitalocean.yml`.
-
-It deploys automatically whenever code is pushed to the `dev` branch.
-
-### Required GitHub Secrets
-In GitHub: **Settings → Secrets and variables → Actions → New repository secret**
-
-- `DO_HOST` = your droplet IP (example: `104.236.211.164`)
-- `DO_USERNAME` = SSH user (example: `root`)
-- `DO_PASSWORD` = SSH password for that user
-
-### What the workflow does
-On each push to `dev`, it will:
-1. SSH into your droplet
-2. Reset `/home/protocol-80` to latest `origin/dev`
-3. Run Django migrations
-4. Collect static files
-5. Restart the `protocol80` systemd service
-
------
-
-# Documentation
----
-
-# 🤖 Protocol 80 (v1.0.0)
+# 🤖 RateMyAPI (v1.0.0)
 
 > **The storefront for the 2026 Agentic Economy.**
 
-**Protocol 80** is a developer-first API designed to audit, score, and optimize your web services for the AI-agent era. As the web shifts from human-centric browsing to autonomous agent transactions, your API's usability is now its most critical storefront.
-
-**Base URL:** `https://ratemyapi.tech`
+**RateMyAPI** is a developer-first tool designed to audit, score, and optimize web services for AI-agent interoperability. In an era where web traffic is increasingly driven by autonomous agents rather than humans, your API’s usability is your most critical business metric.
 
 ---
 
 ## 🛠 Infrastructure
 
-* 🔵 **Gemini API** — Core Evaluation & Reasoning Engine
-* 🟠 **DigitalOcean** — High-Availability Deployment
+* 🔵 **Gemini 1.5 Flash** — Core Evaluation & Reasoning Engine
+* 🟠 **Django / Python 3.13** — Backend Framework
+* ⚪ **DigitalOcean** — High-Availability Cloud Hosting
 
 ---
 
-## 📊 Agentic Readiness Score
+## 📊 Agentic Readiness Score (ARS)
 
-We evaluate APIs based on five core criteria. Each is rated **0–10** by Gemini and combined via weighted average into a final score.
+We evaluate APIs based on five core criteria. Each is rated **0–10** by Gemini and combined via weighted average into a final **ARS**.
 
 | Criterion | Weight | Description |
 | --- | --- | --- |
@@ -112,106 +30,109 @@ We evaluate APIs based on five core criteria. Each is rated **0–10** by Gemini
 
 ---
 
+## 💻 Developer Setup
+
+1. **Environment:** Create and activate a Python virtual environment.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+
+```
+
+
+2. **Dependencies:** Install the required packages.
+```bash
+pip install -r requirements.txt
+
+```
+
+
+3. **Backend:** Start the Django development server.
+```bash
+cd api
+python manage.py runserver
+
+```
+
+
+*The server must be running to process CLI requests.*
+
+---
+
+## ⌨️ CLI Usage
+
+Run the CLI from the repository root. Ensure your backend server is active (default: `http://127.0.0.1:8000`).
+
+```bash
+# Check API health
+python ratemyapi_cli.py health
+
+# Evaluate an API for AI usability
+# Use --timeout 60 to allow the AI sufficient processing time
+python ratemyapi_cli.py evaluate --body https://api.example.com/v1/docs \
+  --timeout 60 \
+  --documentation \
+  --response-format json
+
+# Get detailed analysis and remediation steps
+python ratemyapi_cli.py analyze --body https://api.example.com/v1/docs \
+  --timeout 60
+
+# Run Django management commands via CLI
+python ratemyapi_cli.py manage migrate
+
+```
+
+---
+
 ## 🚀 API Reference
 
 ### 1. Create Evaluation
 
-`POST /evaluate`
+`POST /api/evaluate/`
 
-Submit an API endpoint or OpenAPI spec for analysis. Evaluations are processed asynchronously.
+Submits an API for audit. Note: This is an intensive process; use a higher timeout on the client side.
 
-#### Headers
+**Request Body:**
 
-| Name | Type | Description |
-| --- | --- | --- |
-| `Content-Type` | `string` | **Required.** Must be `application/json`. |
-| `Idempotency-Key` | `string` | **Recommended.** Unique UUID v4 to prevent duplicate billing on retries. |
-
-#### Request Body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `url` | `string` | **Required.** The target API base URL or spec URL. |
-| `method` | `string` | HTTP method to test (GET, POST, etc.). Defaults to `GET`. |
-| `headers` | `object` | Optional headers for probing the endpoint. |
-| `body` | `object` | Optional request body for write methods. |
-| `callback_url` | `string` | Webhook URL to receive results upon completion. |
-
-#### Example Request
-
-```bash
-curl -X POST https://ratemyapi.tech/api/evaluate \
-  -H "Content-Type: application/json" \
-  -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \
-  -d '{
-    "url": "https://api.example.com/v2/openapi.json",
-    "method": "POST"
-  }'
-
-```
-
-#### Responses
-
-* **`201 Created`**: Evaluation job started.
 ```json
 {
-  "id": "eval_a1b2c3d4e5f6",
-  "status": "processing",
-  "created_at": "2026-02-28T14:30:00Z",
-  "estimated_seconds": 12
+  "api_url": "https://api.example.com/v2/openapi.json",
+  "auth_type": "bearer",
+  "docs_format": "openapi",
+  "environment": "prod"
 }
 
 ```
 
-
-* **`409 Conflict`**: Duplicate request (existing `Idempotency-Key`).
-* **`422 Unprocessable Entity`**: Invalid URL or unsupported parameters.
-
----
-
-### 2. Retrieve Results
-
-`GET /evaluate/{id}`
-
-Fetch the status or results of a previously submitted evaluation.
-
-#### Path Parameters
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `id` | `string` | **Required.** The evaluation ID (format: `eval_*`). |
-
-#### Example Response (Status: Completed)
+**Success Response (`200 OK`):**
 
 ```json
 {
-  "id": "eval_a1b2c3d4e5f6",
-  "status": "completed",
-  "agentic_readiness_score": 7.4,
-  "breakdown": {
-    "semantic_clarity": { "score": 8, "weight": 0.25 },
-    "type_accuracy": { "score": 9, "weight": 0.25 },
-    "token_efficiency": { "score": 6, "weight": 0.20 },
-    "idempotency_safety": { "score": 5, "weight": 0.15 },
-    "documentation_clarity": { "score": 8, "weight": 0.15 }
-  },
-  "recommendations": [
-    "Add Idempotency-Key support to POST endpoints",
-    "Reduce response payload — 40% of fields are unused by agents"
-  ],
-  "evaluated_at": "2026-02-28T14:30:12Z"
+  "service": "ratemyapi",
+  "object": "evaluation",
+  "score": 85,
+  "comment": "Strong semantic clarity, but lacks idempotency keys on POST requests.",
+  "status": "completed"
 }
 
 ```
 
-#### Example Response (Status: Processing)
+### 2. Deep Analysis
+
+`POST /api/analyze/`
+
+Provides a granular breakdown of "friction points" that would prevent an AI agent from successfully using the API.
+
+**Success Response (`200 OK`):**
 
 ```json
 {
-  "id": "eval_a1b2c3d4e5f6",
-  "status": "processing",
-  "progress": 0.65,
-  "estimated_seconds_remaining": 4
+  "service": "ratemyapi",
+  "object": "analysis_report",
+  "findings": ["Inconsistent snake_case usage", "Missing 429 rate limit documentation"],
+  "remediation_plan": "1. Standardize all keys to snake_case. 2. Define rate limits in headers.",
+  "agent_friction": "Agent may struggle to handle unexpected HTML error pages during 500 errors."
 }
 
 ```
@@ -220,7 +141,8 @@ Fetch the status or results of a previously submitted evaluation.
 
 ## 🤝 Contributing
 
-Built for the agentic economy.
-[GitHub](https://www.google.com/search?q=%23) · [Changelog](https://www.google.com/search?q=%23) · [Team](mailto:team@protocol80.dev)
+Built for the 2026 Agentic Economy.
 
-© 2026 Protocol 80. Released under the MIT License.
+[GitHub](https://www.google.com/search?q=https://github.com/your-username/ratemyapi) · [Changelog](https://www.google.com/search?q=%23) · [Team](mailto:team@ratemyapi.tech)
+
+© 2026 RateMyAPI. Released under the MIT License.
