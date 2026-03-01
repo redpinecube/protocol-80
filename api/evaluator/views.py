@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-import gemini 
+from . import gemini 
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -24,7 +24,7 @@ def evaluate(request):
 
     # gemini_response = gemini.tryAPI(api_url) 
     
-    result = gemini.evaluate_api(api_url, api_url, gemini_response)
+    result = gemini.evaluate_api(api_url)
 
     status_code = result.get("status_code", 500)
 
@@ -56,7 +56,6 @@ def evaluate(request):
             "object": "evaluation",
             "api_url": api_url,
             "score": result.get("score"),
-            "comment": result.get("comment"),
             "status": "completed"
         }, status=200)
 
@@ -83,7 +82,7 @@ def analyze(request):
     # We call a specific 'analyze_api' function that returns deeper insights
     try:
         # Pass the whole data dict so Gemini has context (auth_type, environment, etc.)
-        result = gemini.analyze_api(api_url, data) 
+        result = gemini.analyze_api(api_url) 
     except Exception as e:
         # Fallback if the gemini module itself crashes
         result = {"status_code": 503}

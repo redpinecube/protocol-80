@@ -288,7 +288,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--timeout",
         type=validate_timeout_seconds,
-        default=10,
+        default=60,
         help="HTTP timeout in seconds (default: %(default)s)",
     )
 
@@ -332,7 +332,7 @@ def build_parser() -> argparse.ArgumentParser:
     score_parser.add_argument("--authentication", action="store_true", help="API has authentication")
     score_parser.add_argument("--error-handling", action="store_true", help="API has error handling")
     score_parser.add_argument("--versioning", action="store_true", help="API has versioning")
-    score_parser.set_defaults(func=cmd_score)
+    score_parser.set_defaults(func=cmd_evaluate)
 
     analyze_parser = subparsers.add_parser("analyze", help="Get detailed analysis with recommendations")
     analyze_parser.add_argument("--body", required=True, type=validate_http_url, help="Link to API docs/spec, e.g. https://example.com/openapi.json")
