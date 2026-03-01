@@ -55,7 +55,7 @@ def evaluate(request):
             "service": "ratemyapi",
             "object": "evaluation",
             "api_url": api_url,
-            "score": result.get("score"),
+            "SCORE": result.get("SCORE"),
             "status": "completed"
         }, status=200)
 
@@ -117,6 +117,7 @@ def analyze(request):
             "service": "ratemyapi",
             "object": "analysis_report",
             "api_url": api_url,
+            "score": result.get("SCORE"),
             "findings": result.get("findings", []),           # List of issues
             "remediation_plan": result.get("remediation"),     # Step-by-step fix
             "agent_friction": result.get("friction_points"),   # Why AI struggles with it

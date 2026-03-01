@@ -1,5 +1,4 @@
 
-
 # 🤖 RateMyAPI (v1.0.0)
 
 > **The storefront for the 2026 Agentic Economy.**
