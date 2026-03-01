@@ -95,13 +95,6 @@ def validate_auth_inputs(
         raise ValueError(f"auth_type '{auth_type}' requires --auth-token.")
 
 
-def validate_environment_inputs(args: argparse.Namespace) -> None:
-    if args.environment == "prod" and args.do_simulation and not args.allow_prod_simulation:
-        raise ValueError(
-            "Simulation against prod is blocked. Use --allow-prod-simulation to confirm."
-        )
-
-
 def print_backend_error(prefix: str, error_body: str) -> None:
     if not error_body:
         return
@@ -138,7 +131,6 @@ def build_evaluation_payload(args: argparse.Namespace) -> dict:
         private_api_key = validate_private_api_key(args.private_api_key)
         auth_token = validate_auth_token(args.auth_token)
         validate_auth_inputs(args.auth_type, private_api_key, auth_token)
-        validate_environment_inputs(args)
     except ValueError as exc:
         print(f"Input validation error: {exc}", file=sys.stderr)
         raise
@@ -150,7 +142,6 @@ def build_evaluation_payload(args: argparse.Namespace) -> dict:
         "auth_token": auth_token,
         "docs_format": args.docs_format,
         "environment": args.environment,
-        "do_simulation": args.do_simulation,
         "api_url": args.body,
         "endpoints": endpoints,
         "documentation": args.documentation,
@@ -345,8 +336,6 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate_parser.add_argument("--auth-token", default=os.environ.get("PROTOCOL80_AUTH_TOKEN"), help="Auth token for bearer/basic auth (optional)")
     evaluate_parser.add_argument("--docs-format", choices=["openapi", "swagger", "postman", "other"], default="openapi", help="Documentation format for --body")
     evaluate_parser.add_argument("--environment", choices=["dev", "staging", "prod"], default="dev", help="Target API environment")
-    evaluate_parser.add_argument("--do-simulation", action="store_true", default=False, help="Run simulation checks (default: false)")
-    evaluate_parser.add_argument("--allow-prod-simulation", action="store_true", default=False, help="Allow simulation when environment=prod")
     evaluate_parser.add_argument("--endpoints", help="Comma-separated list of endpoints")
     evaluate_parser.add_argument("--documentation", action="store_true", help="API has documentation")
     evaluate_parser.add_argument("--response-format", choices=["json", "xml", "other"], help="Response format")
@@ -362,8 +351,6 @@ def build_parser() -> argparse.ArgumentParser:
     score_parser.add_argument("--auth-token", default=os.environ.get("PROTOCOL80_AUTH_TOKEN"), help="Auth token for bearer/basic auth (optional)")
     score_parser.add_argument("--docs-format", choices=["openapi", "swagger", "postman", "other"], default="openapi", help="Documentation format for --body")
     score_parser.add_argument("--environment", choices=["dev", "staging", "prod"], default="dev", help="Target API environment")
-    score_parser.add_argument("--do-simulation", action="store_true", default=False, help="Run simulation checks (default: false)")
-    score_parser.add_argument("--allow-prod-simulation", action="store_true", default=False, help="Allow simulation when environment=prod")
     score_parser.add_argument("--endpoints", help="Comma-separated list of endpoints")
     score_parser.add_argument("--documentation", action="store_true", help="API has documentation")
     score_parser.add_argument("--response-format", choices=["json", "xml", "other"], help="Response format")
@@ -379,8 +366,6 @@ def build_parser() -> argparse.ArgumentParser:
     analyze_parser.add_argument("--auth-token", default=os.environ.get("PROTOCOL80_AUTH_TOKEN"), help="Auth token for bearer/basic auth (optional)")
     analyze_parser.add_argument("--docs-format", choices=["openapi", "swagger", "postman", "other"], default="openapi", help="Documentation format for --body")
     analyze_parser.add_argument("--environment", choices=["dev", "staging", "prod"], default="dev", help="Target API environment")
-    analyze_parser.add_argument("--do-simulation", action="store_true", default=False, help="Run simulation checks (default: false)")
-    analyze_parser.add_argument("--allow-prod-simulation", action="store_true", default=False, help="Allow simulation when environment=prod")
     analyze_parser.add_argument("--endpoints", help="Comma-separated list of endpoints")
     analyze_parser.add_argument("--documentation", action="store_true", help="API has documentation")
     analyze_parser.add_argument("--response-format", choices=["json", "xml", "other"], help="Response format")
