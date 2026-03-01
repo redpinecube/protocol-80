@@ -1,0 +1,37 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-digitalocean-dev
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          password: ${{ secrets.DO_PASSWORD }}
+          port: 22
+          script_stop: true
+          script: |
+            set -e
+            cd /home/protocol-80
+            git fetch origin dev
+            git checkout dev
+            git reset --hard origin/dev
+            source .venv/bin/activate
+            cd api
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            systemctl restart protocol80
+            systemctl status protocol80 --no-pager

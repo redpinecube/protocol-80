@@ -55,3 +55,23 @@ When the server is running (default: http://127.0.0.1:8000):
 - `POST /api/score/` - Get quick usability score
 - `POST /api/analyze/` - Get detailed analysis with recommendations
 - `/admin/` - Django admin interface
+
+## Auto Deploy to DigitalOcean
+This repo includes a GitHub Actions workflow at `.github/workflows/deploy-digitalocean.yml`.
+
+It deploys automatically whenever code is pushed to the `dev` branch.
+
+### Required GitHub Secrets
+In GitHub: **Settings → Secrets and variables → Actions → New repository secret**
+
+- `DO_HOST` = your droplet IP (example: `104.236.211.164`)
+- `DO_USERNAME` = SSH user (example: `root`)
+- `DO_PASSWORD` = SSH password for that user
+
+### What the workflow does
+On each push to `dev`, it will:
+1. SSH into your droplet
+2. Reset `/home/protocol-80` to latest `origin/dev`
+3. Run Django migrations
+4. Collect static files
+5. Restart the `protocol80` systemd service
