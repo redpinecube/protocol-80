@@ -34,17 +34,19 @@ def evaluate(request):
 @require_http_methods(["POST"])
 def score(request):
     """
-    Get usability score for an API.
-    IntegratesWith backend ruling system.
+    Get a quick score payload for an API.
+    Integrates with backend ruling system.
     """
     try:
         data = json.loads(request.body.decode("utf-8"))
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON payload"}, status=400)
 
-    # TODO: Integrate with backend ruling system
+    api_url = data.get("api_url", "unknown")
+
     return JsonResponse({
         "service": "protocol-80-api",
+        "api_url": api_url,
         "status": "received",
         "data": data,
         "message": "Score request received. Integrate with your backend scoring service."

@@ -249,31 +249,6 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
         return 1
 
 
-def cmd_score(args: argparse.Namespace) -> int:
-    """Get usability score for an API"""
-    url = normalize_url(args.base_url, "/api/score/")
-    try:
-        payload = build_evaluation_payload(args)
-    except ValueError:
-        return 2
-    
-    try:
-        result = post_json(url, payload, args.timeout)
-        print(json.dumps(result, indent=2))
-        return 0
-    except error.HTTPError as exc:
-        error_body = exc.read().decode("utf-8") if exc.fp else ""
-        print(f"Score request failed: {exc.code} {exc.reason}", file=sys.stderr)
-        print_backend_error("Score", error_body)
-        return 1
-    except json.JSONDecodeError:
-        print("Score request failed: backend response is not valid JSON", file=sys.stderr)
-        return 1
-    except error.URLError as exc:
-        print(f"Score request failed: {exc}", file=sys.stderr)
-        return 1
-
-
 def cmd_analyze(args: argparse.Namespace) -> int:
     """Get detailed analysis with recommendations"""
     url = normalize_url(args.base_url, "/api/analyze/")
