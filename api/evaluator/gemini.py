@@ -31,6 +31,7 @@ def analyze_api(api_name: str) -> dict:
 
         except requests.exceptions.RequestException as e:
             return f"ERROR: {str(e)}"
+
     # ------------------------------------------------
 
     # STEP 1: Call API automatically
@@ -72,8 +73,12 @@ API_RESPONSE:
 OUTPUT FORMAT (STRICT):
 Return ONLY JSON:
 - "score": list of six numbers as described above. always return a list of 6 numbers, never return just 0 even for errors
-- "comment": string containing the evaluation or improvement suggestion 
+- "comment": string containing the error if any or anything that findings, remediations and
+  friction_points do not cover.
 - "status_code": integer indicating the overall health of the API request 
+- "findings":  [],          # List of issues
+- "remediation": "",     # Step-by-step fix
+- "friction_points": "",   # Why AI struggles with it
 • 200 – OK 
 • 400 – Faulty input 
 • 401 – Unauthorized (private API without key) 
@@ -84,7 +89,10 @@ an example of a valid output is:
 {{
   "score": [...],
   "comment": "...",
-  "status_code": 200
+  "status_code": 200,
+  "findings":  [],          # List of issues
+  "remediation": "",     # Step-by-step fix
+  "friction_points": "",   # Why AI struggles with it
 }}
 """
 
@@ -97,16 +105,16 @@ an example of a valid output is:
     # STEP 4: Parse output safely (Applying the Regex Fix here too!)
     try:
         # Use Regex to find the JSON block between the first { and last }
-        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        match = re.search(r"\{.*\}", response.text, re.DOTALL)
         clean_json = match.group(0) if match else response.text
         result = json.loads(clean_json)
-        
+
     except Exception as e:
         print(f"DEBUG: Analyze Parsing failed. Raw: {response.text}")
         return {
             "status_code": 503,
             "API_NAME": api_name,
-            "SCORE": [0, 0, 0, 0, 0, 0], # Ensure we return the expected list format
+            "SCORE": [0, 0, 0, 0, 0, 0],  # Ensure we return the expected list format
             "COMMENT": "AI returned malformed data. Try again.",
         }
 
@@ -115,7 +123,12 @@ an example of a valid output is:
         "API_NAME": api_name,
         "SCORE": result.get("score"),
         "COMMENT": result.get("comment"),
+        "findings": result.get("findings"),  # List of issues
+        "remediation": result.get("remediation"),  # Step-by-step fix
+        "friction_points": result.get("friction_points"),  # Why AI struggles with it
     }
+
+
 def evaluate_api(api_name: str) -> dict:
     """
     Reduced evaluator:
@@ -138,6 +151,7 @@ def evaluate_api(api_name: str) -> dict:
 
         except requests.exceptions.RequestException as e:
             return f"ERROR: {str(e)}"
+
     # ------------------------------------------------
 
     # STEP 1: Call API
@@ -197,16 +211,18 @@ Example:
     # STEP 4: Parse output
     try:
         # 1. Look for anything between { and }
-        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        match = re.search(r"\{.*\}", response.text, re.DOTALL)
         if match:
             clean_json = match.group(0)
             result = json.loads(clean_json)
         else:
             # Fallback if no brackets are found
             result = json.loads(response.text)
-            
+
     except Exception as e:
-        print(f"DEBUG: Parsing failed. Raw response: {response.text}") # Helpful for logs
+        print(
+            f"DEBUG: Parsing failed. Raw response: {response.text}"
+        )  # Helpful for logs
         return {
             "status_code": 503,
             "API_NAME": api_name,
@@ -214,7 +230,7 @@ Example:
         }
 
     return {
-        "status_code": result.get("status_code", 200), # Default to 200 if missing
+        "status_code": result.get("status_code", 200),  # Default to 200 if missing
         "API_NAME": api_name,
         "SCORE": result.get("score", 0),
     }
