@@ -32,27 +32,6 @@ def evaluate(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def score(request):
-    """
-    Get usability score for an API.
-    IntegratesWith backend ruling system.
-    """
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON payload"}, status=400)
-
-    # TODO: Integrate with backend ruling system
-    return JsonResponse({
-        "service": "protocol-80-api",
-        "status": "received",
-        "data": data,
-        "message": "Score request received. Integrate with your backend scoring service."
-    })
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
 def analyze(request):
     """
     Detailed analysis for an API.
