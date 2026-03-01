@@ -17,7 +17,7 @@ Use the project CLI from the repository root:
 # Check API health
 python protocol80_cli.py health
 
-# Evaluate your API for AI usability
+# Evaluate your API for AI usability (get score)
 python protocol80_cli.py evaluate https://myapi.com \
   --endpoints /users,/products,/orders \
   --documentation \
@@ -25,12 +25,6 @@ python protocol80_cli.py evaluate https://myapi.com \
   --authentication \
   --error-handling \
   --versioning
-
-# Get quick score
-python protocol80_cli.py score https://myapi.com \
-  --endpoints /users,/products \
-  --documentation \
-  --authentication
 
 # Get detailed analysis with recommendations
 python protocol80_cli.py analyze https://myapi.com \
@@ -51,8 +45,7 @@ python protocol80_cli.py manage runserver
 When the server is running (default: http://127.0.0.1:8000):
 - `GET /` - API index with endpoint list
 - `GET /health/` - Health check
-- `POST /api/evaluate/` - Evaluate API usability (full report)
-- `POST /api/score/` - Get quick usability score
+- `POST /api/evaluate/` - Evaluate API usability (get score)
 - `POST /api/analyze/` - Get detailed analysis with recommendations
 - `/admin/` - Django admin interface
 
