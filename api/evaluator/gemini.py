@@ -2,23 +2,42 @@ from google import genai
 from dotenv import load_dotenv
 import os
 import json
+import requests
 
-# This finds your .env file and loads the variables into os.environ
 load_dotenv()
 
-# Now you can assign it to a Django setting
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-
-# The client gets the API key from the environment variable `GEMINI_API_KEY`.
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client()
 
-# example usage:
-# response = client.models.generate_content(
-#     model="gemini-3-flash-preview", contents="recipe for egg fried rice"
-# )
-# print(response.text)
 
-evaluation_prompt = f"""
+def analyze_api(api_name: str) -> dict:
+    """
+    Calls the API first, captures its response, then evaluates using Gemini.
+    """
+    api_doc = api_name
+
+    # ---------- INTERNAL HELPER FUNCTION ----------
+    def call_api(api_url: str) -> str:
+        """Call the API and return raw response as string."""
+        try:
+            res = requests.get(api_url, timeout=10)
+
+            # Try to return JSON nicely formatted if possible
+            try:
+                return json.dumps(res.json(), indent=2)
+            except Exception:
+                return res.text
+
+        except requests.exceptions.RequestException as e:
+            return f"ERROR: {str(e)}"
+    # ------------------------------------------------
+
+    # STEP 1: Call API automatically
+    api_response = call_api(api_name)
+
+    # STEP 2: Build Gemini prompt
+    prompt = f"""
+You are a strict API quality evaluator.
 
 EVALUATION CRITERIA:
 
@@ -28,71 +47,18 @@ If the response contains an error:
     • Clearly state what the error is
     • Provide ONE short possible fix
 
-If the response is valid:
-Score from 1 to 10 based on:
+If the response is valid, provide a list of six numbers:
 
-1. Structural clarity (JSON consistency, predictable schema)
-2. Completeness (all documented fields returned)
-3. Documentation alignment (matches documented contract)
-4. Naming clarity (clear, unambiguous fields)
-5. AI-friendliness (machine-readable, minimal ambiguity)
-
-SCORING GUIDE:
-1–3 = Poorly structured, unclear, or inconsistent
-4–6 = Functional but lacks clarity or consistency
-7–8 = Well structured with minor improvements possible
-9–10 = Excellent structure, fully aligned, highly AI-friendly
+1. Overall score out of 10
+2. Structural clarity score out of 100
+3. Completeness score out of 100
+4. Documentation alignment score out of 100
+5. Naming clarity score out of 100
+6. AI-friendliness score out of 100
 
 COMMENT REQUIREMENTS:
 - One concise evaluation
 - If valid, include ONE specific improvement suggestion
-
-OUTPUT FORMAT (STRICT):
-Return ONLY a JSON object with the following keys:
-
-- "score": integer (0-10) following the scoring rules above
-- "comment": string containing the evaluation or improvement suggestion
-- "status_code": integer indicating the overall health of the API request
-    • 200 – OK
-    • 400 – Faulty input
-    • 401 – Unauthorized (private API without key)
-    • 422 – Dead/unresponsive links
-    • 503 – Service Unavailable (e.g. Gemini is down)
-
-Examples of valid outputs:
-  "score": 0,
-  "comment": "Missing required 'id' field. Fix: include all mandatory response fields.",
-  "status_code": 400
-
-
-  "score": 7,
-  "comment": "Clear structure but field naming could be more descriptive.",
-  "status_code": 200
-
-"""
-
-
-
-
-
-def evaluate_api(api_name: str, api_doc: str, api_response: str) -> dict:
-    """Run the Gemini evaluation prompt and return structured results.
-
-    Args:
-        api_name: Friendly name of the API being evaluated.
-        api_doc: The documentation string for the API.
-        api_response: The raw response returned by the API.
-
-    Returns:
-        A dictionary with keys ``status_code``, ``API_NAME``, ``SCORE``, ``COMMENT``.
-    """
-
-    # build prompt with provided inputs
-    prompt = f"""
-You are a strict API quality evaluator.
-
-Your task:
-Evaluate how AI-friendly, well-structured, and well-documented the API response is, based on the API documentation.
 
 INPUTS:
 
@@ -102,19 +68,35 @@ API_DOCUMENTATION:
 API_RESPONSE:
 {api_response}
 
-{evaluation_prompt.split('OUTPUT FORMAT')[1]}
+OUTPUT FORMAT (STRICT):
+Return ONLY JSON:
+- "score": list of six numbers as described above. always return a list of 6 numbers, never return just 0 even for errors
+- "comment": string containing the evaluation or improvement suggestion 
+- "status_code": integer indicating the overall health of the API request 
+• 200 – OK 
+• 400 – Faulty input 
+• 401 – Unauthorized (private API without key) 
+• 422 – Dead/unresponsive links 
+• 503 – Service Unavailable (e.g. Gemini is down)
+
+an example of a valid output is: 
+{{
+  "score": [...],
+  "comment": "...",
+  "status_code": 200
+}}
 """
 
+    # STEP 3: Call Gemini
     response = client.models.generate_content(
         model="gemini-3-flash-preview",
         contents=prompt,
     )
 
-    # parse the JSON output from the model
+    # STEP 4: Parse output safely
     try:
         result = json.loads(response.text)
     except Exception:
-        # if parsing fails, treat as error
         return {
             "status_code": 503,
             "API_NAME": api_name,
@@ -129,3 +111,96 @@ API_RESPONSE:
         "COMMENT": result.get("comment"),
     }
 
+def evaluate_api(api_name: str) -> dict:
+    """
+    Reduced evaluator:
+    Calls the API, then asks Gemini to return ONLY:
+    - overall score (0–10)
+    - status code
+    """
+
+    api_doc = api_name
+
+    # ---------- INTERNAL HELPER FUNCTION ----------
+    def call_api(api_url: str) -> str:
+        try:
+            res = requests.get(api_url, timeout=10)
+
+            try:
+                return json.dumps(res.json(), indent=2)
+            except Exception:
+                return res.text
+
+        except requests.exceptions.RequestException as e:
+            return f"ERROR: {str(e)}"
+    # ------------------------------------------------
+
+    # STEP 1: Call API
+    api_response = call_api(api_name)
+
+    # STEP 2: Reduced Gemini prompt
+    prompt = f"""
+You are a strict API evaluator.
+
+TASK:
+Evaluate the API response quality.
+
+RULES:
+
+If the response contains ANY error:
+- Score MUST be 0
+- "status_code": integer indicating the overall health of the API request 
+• 200 – OK 
+• 400 – Faulty input 
+• 401 – Unauthorized (private API without key) 
+• 422 – Dead/unresponsive links 
+• 503 – Service Unavailable (e.g. Gemini is down)
+
+If the response is valid:
+- Give ONE overall score from 1–10
+- Assign status_code = 200
+
+INPUTS:
+
+API_DOCUMENTATION:
+{api_doc}
+
+API_RESPONSE:
+{api_response}
+
+OUTPUT FORMAT (STRICT):
+Return ONLY JSON:
+
+{{
+  "score": int,
+  "status_code": int
+}}
+
+Example:
+{{
+  "score": 7,
+  "status_code": 200
+}}
+"""
+
+    # STEP 3: Call Gemini
+    response = client.models.generate_content(
+        model="gemini-3-flash-preview",
+        contents=prompt,
+    )
+
+    # STEP 4: Parse output
+    try:
+        result = json.loads(response.text)
+    except Exception:
+        return {
+            "status_code": 503,
+            "API_NAME": api_name,
+            "SCORE": 0,
+        }
+
+    return {
+        "status_code": result.get("status_code"),
+        "API_NAME": api_name,
+        "SCORE": result.get("score"),
+    }
