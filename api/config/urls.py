@@ -38,7 +38,8 @@ def health(request):
     return JsonResponse({"status": "ok", "service": "protocol-80-api"})
 
 urlpatterns = [
-    path('', TemplateView.as_view(template_name="landing.html"), name='index'),
+    path('', TemplateView.as_view(template_name="index.html"), name='index'),
+    path('analysis/', TemplateView.as_view(template_name="analysis.html"), name='analysis'),
     path('docs/', TemplateView.as_view(template_name="protocol80-swagger.html"), name='docs'),
     
     path('admin/', admin.site.urls),
