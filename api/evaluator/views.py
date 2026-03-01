@@ -32,6 +32,29 @@ def evaluate(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+def score(request):
+    """
+    Get a quick score payload for an API.
+    Integrates with backend ruling system.
+    """
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON payload"}, status=400)
+
+    api_url = data.get("api_url", "unknown")
+
+    return JsonResponse({
+        "service": "protocol-80-api",
+        "api_url": api_url,
+        "status": "received",
+        "data": data,
+        "message": "Score request received. Integrate with your backend scoring service."
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
 def analyze(request):
     """
     Detailed analysis for an API.
