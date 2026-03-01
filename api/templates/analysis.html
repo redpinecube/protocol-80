@@ -1,0 +1,185 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analysis — RateMyAPI</title>
+<link rel="icon" type="image/png" href="{% static 'assets/favicon.png' %}">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="noise"></div>
+
+<!-- Sticky Top Bar -->
+<div class="analysis-topbar">
+  <a class="btn-back" href="{% url 'index' %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back
+  </a>
+  <div class="topbar-url" id="topbarUrl"></div>
+  <div class="topbar-score" id="topbarScore"></div>
+</div>
+
+<div class="analysis-container" id="analysisContainer">
+
+  <!-- Score Hero -->
+  <div class="score-hero">
+    <div class="score-hero-ring">
+      <svg viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="54"/>
+        <circle class="ring-fill" id="heroRingFill" cx="60" cy="60" r="54"/>
+      </svg>
+      <div class="score-num" id="heroScoreNum">—</div>
+    </div>
+    <div class="score-hero-info">
+      <h2 id="heroApiName"></h2>
+      <div class="analysis-id" id="heroAnalysisId"></div>
+      <div class="hero-tags" id="heroTags"></div>
+    </div>
+  </div>
+
+  <!-- 5 Criteria Cards -->
+  <div class="criteria-grid" id="criteriaGrid">
+    <div class="criteria-card">
+      <div class="cc-header">
+        <div class="cc-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="cc-val" id="ccStructural">—</div>
+      </div>
+      <div class="cc-label">Structural Clarity</div>
+      <div class="cc-desc">JSON consistency, predictable schema</div>
+      <div class="cc-bar"><div class="cc-bar-fill" id="ccBarStructural"></div></div>
+    </div>
+
+    <div class="criteria-card">
+      <div class="cc-header">
+        <div class="cc-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="cc-val" id="ccCompleteness">—</div>
+      </div>
+      <div class="cc-label">Completeness</div>
+      <div class="cc-desc">All documented fields returned</div>
+      <div class="cc-bar"><div class="cc-bar-fill" id="ccBarCompleteness"></div></div>
+    </div>
+
+    <div class="criteria-card">
+      <div class="cc-header">
+        <div class="cc-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        </div>
+        <div class="cc-val" id="ccDocAlignment">—</div>
+      </div>
+      <div class="cc-label">Doc Alignment</div>
+      <div class="cc-desc">Matches documented contract</div>
+      <div class="cc-bar"><div class="cc-bar-fill" id="ccBarDocAlignment"></div></div>
+    </div>
+
+    <div class="criteria-card">
+      <div class="cc-header">
+        <div class="cc-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        </div>
+        <div class="cc-val" id="ccNaming">—</div>
+      </div>
+      <div class="cc-label">Naming Clarity</div>
+      <div class="cc-desc">Clear, unambiguous fields</div>
+      <div class="cc-bar"><div class="cc-bar-fill" id="ccBarNaming"></div></div>
+    </div>
+
+    <div class="criteria-card cc-wide">
+      <div class="cc-header">
+        <div class="cc-icon cc-icon-accent">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a7 7 0 017 7c0 3-2 5-3 6v1a2 2 0 01-2 2h-4a2 2 0 01-2-2v-1c-1-1-3-3-3-6a7 7 0 017-7z"/><path d="M9 21h6M10 17h4"/></svg>
+        </div>
+        <div class="cc-val" id="ccAIFriendly">—</div>
+      </div>
+      <div class="cc-label">AI-Friendliness</div>
+      <div class="cc-desc">Machine-readable, minimal ambiguity for LLM agents</div>
+      <div class="cc-bar"><div class="cc-bar-fill" id="ccBarAIFriendly"></div></div>
+    </div>
+  </div>
+
+  <!-- AI Summary -->
+  <div class="ai-summary">
+    <div class="ai-summary-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 017 7c0 3-2 5-3 6v1a2 2 0 01-2 2h-4a2 2 0 01-2-2v-1c-1-1-3-3-3-6a7 7 0 017-7z"/><path d="M9 21h6M10 17h4"/></svg>
+      AI Analysis <span class="gemini-badge">GEMINI</span>
+    </div>
+    <div id="aiSummaryContent"></div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="section-title">Recommendations</div>
+  <div class="recs-list" id="recsList"></div>
+
+</div>
+
+<div class="footer"><p>Protocol 80 — Developer-first API auditing for the Agentic Economy</p></div>
+
+<script src="{% static 'js/app.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const raw = sessionStorage.getItem('ratemyapi_analysis');
+    if (!raw) { window.location.href = '/'; return; }
+    renderAnalysis(JSON.parse(raw));
+  });
+
+  function renderAnalysis(d) {
+    const cleanUrl = d.url.replace(/^https?:\/\//, '');
+    const analysisId = d.analysisId || ('p80-' + Math.random().toString(36).substring(2, 10));
+
+    document.title = `${cleanUrl} — Analysis — RateMyAPI`;
+    document.getElementById('topbarUrl').textContent = cleanUrl;
+    document.getElementById('topbarScore').textContent = d.overall;
+    document.getElementById('topbarScore').style.color = getScoreColor(d.overall);
+
+    document.getElementById('heroApiName').textContent = cleanUrl;
+    document.getElementById('heroAnalysisId').textContent = `GET api/analysis/${analysisId}`;
+    document.getElementById('heroScoreNum').textContent = d.overall;
+    document.getElementById('heroScoreNum').style.color = getScoreColor(d.overall);
+    document.getElementById('heroTags').innerHTML = d.tags.map(([l, s]) => `<span class="tag ${s}">${l}</span>`).join('');
+
+    // Ring
+    const circ = 2 * Math.PI * 54;
+    const ring = document.getElementById('heroRingFill');
+    ring.style.stroke = getScoreColor(d.overall);
+    ring.style.strokeDashoffset = circ;
+    setTimeout(() => { ring.style.strokeDashoffset = circ - (d.overall / 100) * circ; }, 100);
+
+    // 5 Criteria
+    const criteriaMap = [
+      { key: 'structural',    id: 'Structural',    color: 'var(--green)' },
+      { key: 'completeness',  id: 'Completeness',  color: 'var(--blue)' },
+      { key: 'docAlignment',  id: 'DocAlignment',  color: 'var(--yellow)' },
+      { key: 'naming',        id: 'Naming',        color: '#c084fc' },
+      { key: 'aiFriendly',    id: 'AIFriendly',    color: 'var(--red-light)' },
+    ];
+    criteriaMap.forEach(c => {
+      const val = d.criteria[c.key];
+      document.getElementById(`cc${c.id}`).textContent = val;
+      document.getElementById(`cc${c.id}`).style.color = getScoreColor(val);
+      const bar = document.getElementById(`ccBar${c.id}`);
+      bar.style.background = c.color;
+      setTimeout(() => { bar.style.width = val + '%'; }, 200);
+    });
+
+    // AI Summary
+    document.getElementById('aiSummaryContent').innerHTML = d.summary.map(p => `<p>${p}</p>`).join('');
+
+    // Recommendations
+    document.getElementById('recsList').innerHTML = (d.recommendations || []).map(r =>
+      `<div class="rec-item">
+        <div class="rec-severity ${r.severity}"></div>
+        <div class="rec-content"><div class="rec-title">${r.title}</div><div class="rec-body">${r.body}</div></div>
+      </div>`
+    ).join('');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RateMyAPI — Protocol 80</title>
+<link rel="icon" type="image/png" href="{% static 'assets/favicon.png' %}">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="noise"></div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="orbital-spinner">
+    <div class="ring ring-1"></div><div class="ring ring-2"></div><div class="ring ring-3"></div><div class="core"></div>
+  </div>
+  <div class="loading-text">
+    <div class="loading-title">Analyzing with <span class="gemini-badge">GEMINI</span></div>
+    <div class="loading-status" id="loadingStatus">Initializing audit<span class="cursor-blink"></span></div>
+  </div>
+  <div class="loading-steps">
+    <div class="load-step" id="step-0"><span class="step-icon"></span><span class="step-text">Resolving endpoint schema</span><span class="step-time" id="step-0-time"></span></div>
+    <div class="load-step" id="step-1"><span class="step-icon"></span><span class="step-text">Crawling API surface</span><span class="step-time" id="step-1-time"></span></div>
+    <div class="load-step" id="step-2"><span class="step-icon"></span><span class="step-text">Evaluating agent compatibility</span><span class="step-time" id="step-2-time"></span></div>
+    <div class="load-step" id="step-3"><span class="step-icon"></span><span class="step-text">Scoring with Protocol 80</span><span class="step-time" id="step-3-time"></span></div>
+    <div class="load-step" id="step-4"><span class="step-icon"></span><span class="step-text">Generating report</span><span class="step-time" id="step-4-time"></span></div>
+  </div>
+  <div class="loading-progress"><div class="loading-progress-fill" id="progressFill"></div></div>
+</div>
+
+<!-- Home Page -->
+<div class="home-page">
+  <div class="content">
+    <div class="logo-wrap">
+      <img src="{% static 'assets/logo.png' %}" alt="RateMyAPI">
+    </div>
+    <div class="heading">
+      <h1>Enter your <strong>API endpoint</strong> to get started</h1>
+      <p>Audit, score, and optimize your web services for the 2026 Agentic Economy. Your API usability is your most important storefront.</p>
+    </div>
+    <div class="search-section">
+      <div class="search-bar" id="searchBar">
+        <div class="search-input-wrap">
+          <span class="search-prefix">$</span>
+          <input class="search-input" id="apiInput" type="text" placeholder="https://api.example.com/v1" autocomplete="off" spellcheck="false">
+          <button class="search-submit" id="scanBtn" onclick="scanApi()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 12l5 5L22 2"/></svg>
+            Audit
+          </button>
+        </div>
+        <div class="dropdown" id="dropdown"></div>
+      </div>
+      <div class="quick-actions">
+        <span class="quick-label">Try:</span>
+        <button class="quick-chip" onclick="tryExample('https://api.stripe.com/v1')">stripe.com/v1</button>
+        <button class="quick-chip" onclick="tryExample('https://api.github.com')">github.com</button>
+        <button class="quick-chip" onclick="tryExample('https://api.openai.com/v1')">openai.com/v1</button>
+        <button class="quick-chip" onclick="tryExample('https://jsonplaceholder.typicode.com')">jsonplaceholder</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><p>Protocol 80 — Developer-first API auditing for the Agentic Economy</p></div>
+</div>
+
+<script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>
