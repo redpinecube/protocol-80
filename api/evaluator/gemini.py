@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import json
 import requests
+import re
 
 load_dotenv()
 
@@ -93,15 +94,20 @@ an example of a valid output is:
         contents=prompt,
     )
 
-    # STEP 4: Parse output safely
+    # STEP 4: Parse output safely (Applying the Regex Fix here too!)
     try:
-        result = json.loads(response.text)
-    except Exception:
+        # Use Regex to find the JSON block between the first { and last }
+        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        clean_json = match.group(0) if match else response.text
+        result = json.loads(clean_json)
+        
+    except Exception as e:
+        print(f"DEBUG: Analyze Parsing failed. Raw: {response.text}")
         return {
             "status_code": 503,
             "API_NAME": api_name,
-            "SCORE": 0,
-            "COMMENT": "Unable to parse evaluator output",
+            "SCORE": [0, 0, 0, 0, 0, 0], # Ensure we return the expected list format
+            "COMMENT": "AI returned malformed data. Try again.",
         }
 
     return {
@@ -110,7 +116,6 @@ an example of a valid output is:
         "SCORE": result.get("score"),
         "COMMENT": result.get("comment"),
     }
-
 def evaluate_api(api_name: str) -> dict:
     """
     Reduced evaluator:
@@ -191,8 +196,17 @@ Example:
 
     # STEP 4: Parse output
     try:
-        result = json.loads(response.text)
-    except Exception:
+        # 1. Look for anything between { and }
+        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        if match:
+            clean_json = match.group(0)
+            result = json.loads(clean_json)
+        else:
+            # Fallback if no brackets are found
+            result = json.loads(response.text)
+            
+    except Exception as e:
+        print(f"DEBUG: Parsing failed. Raw response: {response.text}") # Helpful for logs
         return {
             "status_code": 503,
             "API_NAME": api_name,
@@ -200,7 +214,7 @@ Example:
         }
 
     return {
-        "status_code": result.get("status_code"),
+        "status_code": result.get("status_code", 200), # Default to 200 if missing
         "API_NAME": api_name,
-        "SCORE": result.get("score"),
+        "SCORE": result.get("score", 0),
     }
